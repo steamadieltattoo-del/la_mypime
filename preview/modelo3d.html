@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LA MYPIME GAME — modelo 3D interactivo</title>
+<style>
+  html, body { margin:0; height:100%; background:#0e1116; color:#e8edf4; font-family:"Segoe UI",Arial,sans-serif; overflow:hidden; }
+  #app { position:absolute; inset:0; }
+  .hud { position:absolute; top:14px; left:16px; pointer-events:none; text-shadow:0 2px 5px #000; }
+  .hud .money { font-size:20px; font-weight:800; color:#fff; }
+  .hud .goal { margin-top:4px; font-size:14px; font-weight:700; color:#9ff0b5; }
+  .hud .rate { margin-top:4px; font-size:13px; color:#ffd27f; }
+  .hint { position:absolute; bottom:14px; left:16px; font-size:12px; color:#91a0b3; background:rgba(6,10,15,.65); padding:6px 10px; border-radius:6px; pointer-events:none; }
+  .badge { position:absolute; top:14px; right:16px; font-size:11px; font-weight:700; color:#ffc978; background:#4a2a12; border:1px solid #a35c1e; padding:5px 10px; border-radius:999px; pointer-events:none; }
+  .reference { position:absolute; bottom:14px; right:16px; width:190px; background:rgba(6,10,15,.88); border:1px solid #2e3b4d; border-radius:8px; padding:8px; pointer-events:auto; }
+  .reference .title { font-size:11px; font-weight:700; color:#ffc978; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+  .reference img { width:100%; display:block; border-radius:4px; }
+  .reference .thumbs { display:flex; gap:4px; margin-top:6px; }
+  .reference .thumbs img { width:33%; }
+  .reference button { background:none; border:none; color:#91a0b3; font-size:14px; cursor:pointer; line-height:1; }
+  .legend { position:absolute; top:64px; right:16px; width:190px; font-size:11px; color:#c9d4e2; background:rgba(6,10,15,.75); border:1px solid #2e3b4d; border-radius:6px; padding:8px 10px; pointer-events:none; }
+  .legend b { display:block; margin-bottom:5px; color:#ffc978; }
+  .legend div { margin:2px 0; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div class="hud">
+  <div class="money">Día 1 &nbsp; 46.500 CUP &nbsp; Ventas: 0</div>
+  <div class="goal">Meta: 0/27.900 CUP &nbsp; Alquiler: 18.600 &nbsp; Luz: 465 &nbsp; Rep: 70%</div>
+  <div class="rate">USD: 930,00 CUP &nbsp; Precios ×1.00 &nbsp; · &nbsp; triciclo: aparcado hasta que hagas un pedido</div>
+</div>
+<div class="badge">MODELO 3D ILUSTRATIVO</div>
+<div class="legend">
+  <b>Leyenda de elementos</b>
+  <div>Entrada · LA MYPIME</div>
+  <div>Almacén · estantes de pedidos · triciclo</div>
+  <div>Góndolas: frescos y dulces</div>
+  <div>Estanterías: bebidas y ofertas</div>
+  <div>Nevera lácteos · congelador</div>
+  <div>Vitrina y cajas de frescos</div>
+  <div>Carrito · cesta · caja cartoon</div>
+  <div>Computadora de pedidos · señales</div>
+  <button id="botonPedido" style="margin-top:8px;width:100%;padding:7px 6px;background:#1a6b8c;color:#fff;border:1px solid #e6c759;border-radius:5px;cursor:pointer;font-size:11px;font-weight:bold">HACER PEDIDO → triciclo</button>
+  <div id="estadoPedido" style="margin-top:5px;text-align:center;color:#8fd6a5">Triciclo aparcado</div>
+</div>
+<div class="hint">Arrastra = girar &nbsp;·&nbsp; Rueda del ratón = acercar &nbsp;·&nbsp; Clic derecho = mover</div>
+<div class="reference" id="refPanel">
+  <div class="title"><span>Referencia (tu imagen)</span><button onclick="document.getElementById('refPanel').style.display='none'">×</button></div>
+  <img src="referencia_supermercado.webp" alt="Imagen de referencia del supermercado">
+  <div class="thumbs">
+    <img src="thumbnail.webp" alt="Referencia 1">
+    <img src="OIP (3).webp" alt="Referencia 2">
+    <img src="OIP (2).webp" alt="Referencia 3">
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const app = document.getElementById('app');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x121820);
+scene.fog = new THREE.Fog(0x121820, 26, 48);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(16, 14, 18);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+app.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1, -2);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI/2.05;
+controls.minDistance = 8;
+controls.maxDistance = 38;
+
+scene.add(new THREE.HemisphereLight(0xcfe6ff, 0x4b4438, 1.15));
+const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+sun.position.set(8, 16, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -18; sun.shadow.camera.right = 18;
+sun.shadow.camera.top = 18; sun.shadow.camera.bottom = -18;
+scene.add(sun);
+
+const mat = (color, opts={}) => new THREE.MeshStandardMaterial({ color, roughness:0.78, metalness:0.05, ...opts });
+const M = {
+  floor: mat(0xb8ad98), wall: mat(0xe9ebf1), shelf: mat(0x5b4636),
+  road: mat(0x2e3136), line: mat(0xe8d15a), dock: mat(0x8c9094), concrete: mat(0x8e918c),
+  pallet: mat(0x735239), bulto: mat(0xc7a86b),
+  door: mat(0x2a6b8c), brass: mat(0xe6c759),
+  fruitRed: mat(0xdb2e26), fruitGreen: mat(0x47ad47), fruitYellow: mat(0xf5c92e),
+  bread: mat(0xd6944c), wire: mat(0xa8b0b8), signBlue: mat(0x144356), basket: mat(0xe3ddc9),
+  wood: mat(0x8b6538), box: mat(0x9d7142), label: mat(0xd9b26a),
+  blue: mat(0x2466ad), blueLight: mat(0x489ee0), yellow: mat(0xefb832),
+  metal: mat(0xb7c0c9, { metalness:0.6, roughness:0.35 }),
+  tire: mat(0x16191e), dark: mat(0x23262d), glass: mat(0x8fc9e6, { transparent:true, opacity:0.45 }),
+  green: mat(0x49c15c), skin: mat(0xd9a679), vest: mat(0xe8a83a),
+  rice: mat(0xf2f0e6), beans: mat(0x7a2b22), coffee: mat(0x4b2e1c),
+  milk: mat(0xf3f7fb), sugar: mat(0xfafafa), oil: mat(0xe8b83a),
+  bread: mat(0xd99a2b), tomato: mat(0xd9574a)
+};
+
+function box(w,h,d, material, x=0,y=0,z=0, parent=scene) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), material);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true;
+  parent.add(m); return m;
+}
+function cyl(rTop,rBot,h, material, x=0,y=0,z=0, parent=scene) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rTop,rBot,h,18), material);
+  m.position.set(x,y,z); m.castShadow = true; parent.add(m); return m;
+}
+function sphere(r, material, x=0,y=0,z=0, parent=scene) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r,18,14), material);
+  m.position.set(x,y,z); m.castShadow = true; parent.add(m); return m;
+}
+
+// Suelo y paredes (local ampliado hasta z=12; norte partida: entrada en x=-8)
+box(20,0.3,20,M.floor,0,-0.15,2);
+box(2,3.5,0.3,M.wall,-9,1.75,12);
+box(18,3.5,0.3,M.wall,1,1.75,12);
+box(2.4,1.2,0.3,M.wall,-8,2.9,12);
+box(8,3.5,0.3,M.wall,-6,1.75,-8);
+box(8,3.5,0.3,M.wall,6,1.75,-8);
+box(4,1.2,0.3,M.wall,0,2.9,-8);
+box(0.3,3.5,20,M.wall,10,1.75,2);
+box(0.3,3.5,20,M.wall,-10,1.75,2);
+
+// Pared interior que separa tienda y almacén, con puerta central de 3 m
+box(8.5,3.5,0.3,M.wall,-5.75,1.75,-3);
+box(8.5,3.5,0.3,M.wall,5.75,1.75,-3);
+box(3,1.2,0.3,M.wall,0,2.9,-3);
+box(0.2,2.3,0.35,M.shelf,-1.6,1.15,-3);
+box(0.2,2.3,0.35,M.shelf,1.6,1.15,-3);
+box(3.4,0.2,0.35,M.shelf,0,2.35,-3);
+
+// Carretera exterior, muelle y almacén (el triciclo no entra en las estanterías)
+box(30,0.12,5,M.road,0,-0.06,-11.5);
+for(let i=-12;i<=12;i+=4) box(2,0.02,0.1,M.line,i,0.01,-11.5);
+box(4.2,0.10,2,M.dock,0,-0.05,-9);
+box(16,0.01,5,M.concrete,0,0.005,-5.5);
+
+// Entrada principal: marco, hoja entreabierta, tirador y porche
+box(0.18,2.4,0.4,M.shelf,-9.2,1.2,12);
+box(0.18,2.4,0.4,M.shelf,-6.8,1.2,12);
+box(2.6,0.18,0.4,M.shelf,-8,2.35,12);
+const doorLeaf = box(2.1,2.3,0.12,M.door,-8.85,1.15,12.05);
+doorLeaf.rotation.y = -28*Math.PI/180;
+box(0.12,0.4,0.12,M.brass,-7.95,1.15,12.35);
+box(4.2,0.1,2,M.dock,-8,-0.02,12.9);
+
+function pallet(x,z) {
+  const g = new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  box(1.4,0.16,1.1,M.pallet,0,0.08,0,g);
+  for(let i=0;i<3;i++) {
+    box(0.55,0.38,0.80,M.bulto,-0.32+(i%2)*0.64,0.45+Math.floor(i/2)*0.42,0,g);
+  }
+}
+pallet(-6.5,-6.6);
+pallet(6.5,-6.6);
+
+// Estantes metálicos del almacén: 4 racks con 2 cajas de pedido cada uno.
+const coloresPedido = [M.rice, M.beans, M.coffee, M.milk, M.sugar, M.oil, M.bread, M.tomato];
+[-6.9, -2.9, 1.1, 5.1].forEach((rx, r) => {
+  const rack = new THREE.Group(); rack.position.set(rx,0,-5); scene.add(rack);
+  [-1.24,1.24].forEach(px => [-0.54,0.54].forEach(pz =>
+    box(0.10,1.9,0.10,M.metal,px,0.95,pz,rack)));
+  box(2.6,0.10,1.2,M.wood,0,0.45,0,rack);
+  box(2.6,0.10,1.2,M.wood,0,1.45,0,rack);
+  [-0.65,0.65].forEach((c,i) => {
+    box(0.75,0.60,0.80,M.bulto,c,1.80,0,rack);
+    box(0.90,0.60,0.90,M.box,c,0.80,0,rack);
+    box(0.50,0.03,0.50,coloresPedido[r*2+i],c,1.12,0,rack);
+  });
+});
+
+// Computadora de pedidos del almacén (abre la pantalla del proveedor en el juego).
+const pcPedidos = new THREE.Group(); pcPedidos.position.set(7.5,0,-4.2); scene.add(pcPedidos);
+box(1.5,0.76,0.75,M.wood,0,0.38,0,pcPedidos);
+box(1.05,0.68,0.10,M.dark,0,1.05,-0.10,pcPedidos);
+box(0.90,0.52,0.04,mat(0x1a6b8c),0,1.06,-0.17,pcPedidos);
+box(0.85,0.05,0.28,M.dark,0,0.79,0.30,pcPedidos);
+
+// Carteles estáticos: planos fijos con textura de canvas (no siguen a la cámara).
+function cartel(texto, x, y, z, w, h, yaw, estilo) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = estilo.fondo; ctx.fillRect(0,0,512,128);
+  ctx.strokeStyle = estilo.borde; ctx.lineWidth = estilo.bordeAncho;
+  ctx.strokeRect(4,4,504,120);
+  ctx.fillStyle = estilo.texto; ctx.font = estilo.fuente;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (estilo.linea2) {
+    ctx.fillText(estilo.titulo, 256, 48);
+    ctx.fillStyle = estilo.subcolor; ctx.font = estilo.subfuente;
+    ctx.fillText(estilo.linea2, 256, 94);
+  } else {
+    ctx.fillText(texto, 256, 64);
+  }
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    // Una sola cara: la parte de atrás no se dibuja, así el texto nunca se ve al revés.
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, side: THREE.FrontSide })
+  );
+  m.position.set(x, y, z);
+  m.rotation.y = yaw;
+  scene.add(m);
+  return m;
+}
+const estiloAlmacen = {
+  fondo:'#1c2028', borde:'#000000', bordeAncho:0,
+  texto:'#ffeb9f', fuente:'bold 64px "Segoe UI", Arial'
+};
+cartel('ALMACÉN', 0, 2.9, -7.72, 3.4, 0.85, 0, estiloAlmacen);          // muelle, mira al interior
+cartel('ALMACÉN', 0, 2.75, -2.72, 2.6, 0.65, 0, estiloAlmacen);          // puerta, mira a la tienda
+
+const estiloMypime = {
+  fondo:'#0d384c', borde:'#e6c759', bordeAncho:6,
+  texto:'#ffed9f', fuente:'bold 74px "Segoe UI", Arial',
+  titulo:'LA MYPIME', linea2:'MINIMERCADO',
+  subcolor:'#cfe8f7', subfuente:'bold 30px "Segoe UI", Arial'
+};
+cartel('', -8, 3.05, 11.74, 4.6, 0.96, Math.PI, estiloMypime);           // cara interior, mira a la tienda
+cartel('', -8, 3.05, 12.26, 4.6, 0.96, 0, estiloMypime);                 // cara exterior, mira a la calle
+
+const productColors = [M.rice,M.beans,M.coffee,M.milk,M.sugar,M.oil,M.bread,M.tomato];
+
+// --- Elementos reales exportados de Cartoon_Supermarket_Collection.blend ---
+// Los estantes, la nevera y la caja de la vista 3D también son los modelos cartoon.
+// Se colocan en las mismas posiciones que en la escena de Unity.
+// Cada entrada es una lista de posiciones: los modelos de estantería se duplican
+// para cubrir las 8 unidades de venta, igual que en la escena de Unity.
+const cartoonPlacements = {
+  Gondola_Dulces:     [[-5.0,0,10.0,0],[-8.2,0,-1.0,-Math.PI/2]],
+  Gondola_Frescos:    [[0.0,0,10.0,0],[8.2,0,-1.0,Math.PI/2]],
+  Estanteria_Bebidas: [[5.0,0,10.0,0],[8.2,0,2.0,Math.PI/2]],
+  Estanteria_Ofertas: [[-8.2,0,2.0,-Math.PI/2]],
+  Nevera_Lacteos:     [[8.0,0,10.0,0]],
+  Congelador:         [[5.6,0,6.2,0]],
+  Vitrina_Frescos:    [[8.0,0,4.6,0]],
+  Mesa_Productos:     [[-3.5,0,3.2,0]],
+  Caja_01:            [[5.0,0,-0.5,Math.PI]],
+  Devolucion:         [[2.6,0,-0.6,Math.PI]],
+  Carrito:            [[-7.2,0,10.4,Math.PI]],
+  Cesta_Mano:         [[-6.2,0,10.4,0]],
+  Expositor_Oferta:   [[2.6,0,10.6,0]],
+  Senal_Pasillo:      [[-5.0,0,8.6,0]],
+  Senal_Promo:        [[0.0,0,8.6,0]],
+  Senal_Salida:       [[4.5,0,8.6,0]],
+  Caja_Manzanas:      [[-6.2,0.72,3.2,0]],
+  Caja_Naranjas:      [[-5.0,0.72,3.2,0]],
+  Caja_Verduras:      [[-3.8,0.72,3.2,0]],
+  Bolsa_Snacks:       [[-1.6,0.72,3.2,0]],
+  Caja_Cereales:      [[-1.2,0.72,3.2,0]],
+  Brik_Leche:         [[-0.8,0.72,3.2,0]],
+  Botella_Zumo:       [[-0.4,0.72,3.2,0]],
+  Lata_Refresco:      [[0.0,0.72,3.2,0]],
+  Pack_Agua:          [[0.6,0.72,3.2,0]]
+};
+// Cajas de cartón en el almacén (no vienen en el blend).
+const pila = new THREE.Group(); pila.position.set(-4.5,0,-6.4); scene.add(pila);
+for(let i=0;i<4;i++) box(0.65,0.65,0.65,M.box,(i%2)*0.7-0.35,0.35+Math.floor(i/2)*0.7,0,pila);
+
+new GLTFLoader().load('cartoon_supermarket.glb', gltf => {
+  const root = gltf.scene;
+  root.updateMatrixWorld(true);
+  const byGroup = new Map();
+  root.children.slice().forEach(node => {
+    // GLTFLoader sustituye " | " por "_|_" en los nombres.
+    if (!node.name.includes('_|_')) return;
+    const g = node.name.split('_|_')[0].trim();
+    if (!byGroup.has(g)) byGroup.set(g, []);
+    byGroup.get(g).push(node);
+  });
+  byGroup.forEach((nodes, g) => {
+    const placements = cartoonPlacements[g];
+    if (!placements) return; // cámaras, luces, suelo y líneas no se muestran
+    const bb = new THREE.Box3();
+    nodes.forEach(n => bb.expandByObject(n));
+    const c = bb.getCenter(new THREE.Vector3());
+    const holder = new THREE.Group();
+    const inner = new THREE.Group();
+    holder.add(inner); scene.add(holder);
+    nodes.forEach(n => inner.attach(n));
+    inner.position.set(-c.x, -bb.min.y, -c.z);
+    nodes.forEach(n => n.traverse(o => {
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+    }));
+    placements.forEach((p, i) => {
+      const instance = i === 0 ? holder : holder.clone(true);
+      if (i > 0) scene.add(instance);
+      instance.position.set(p[0], p[1], p[2]);
+      instance.rotation.y = p[3] || 0;
+    });
+  });
+}, undefined, err => console.warn('No se pudo cargar cartoon_supermarket.glb', err));
+
+// 8 cajas de pedido
+const boxXs = [-8,-6,-4,-2,0,2,4,6];
+boxXs.forEach((x,i) => {
+  box(0.9,0.6,0.9,M.box,x,0.3,-5);
+  box(0.5,0.03,0.5,productColors[i],x,0.62,-5);
+});
+
+// Clientes sencillos
+function customer(x,z,color,withBasket) {
+  const g = new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  cyl(0.30,0.34,0.9,color,0,0.75,0,g);
+  sphere(0.25,M.skin,0,1.42,0,g);
+  if (withBasket) box(0.42,0.28,0.32,M.yellow,0.42,0.85,0,g);
+}
+customer(-1.8,1.4,M.blueLight,true);
+customer(1.9,0.4,M.vest,false);
+
+// ---- Triciclo 3D detallado ----
+const tri = new THREE.Group(); scene.add(tri);
+box(1.5,0.08,1.15,M.yellow,0,0.70,0.35,tri);
+box(0.08,0.55,1.15,M.blue,-0.75,0.98,0.35,tri);
+box(0.08,0.55,1.15,M.blue,0.75,0.98,0.35,tri);
+box(1.5,0.55,0.08,M.blueLight,0,0.98,-0.22,tri);
+box(1.5,0.55,0.08,M.blue,0,0.98,0.92,tri);
+box(0.10,0.06,1.15,M.metal,-0.75,1.27,0.35,tri);
+box(0.10,0.06,1.15,M.metal,0.75,1.27,0.35,tri);
+
+function tube(x,y,z,rx,rz,len,color,parent=tri) {
+  const m = cyl(rx,rx,len,color,x,y,z,parent);
+  m.rotation.x = Math.PI/2; m.rotation.z = rz; return m;
+}
+tube(-0.45,0.55,-0.15,0.05,0,1.7,M.metal);
+tube(0.45,0.55,-0.15,0.05,0,1.7,M.metal);
+const cross = cyl(0.04,0.04,0.9,M.metal,0,0.55,0.35,tri); cross.rotation.z = Math.PI/2;
+const steer = cyl(0.05,0.05,0.64,M.metal,0,0.85,-0.95,tri); steer.rotation.x = 0.22;
+cyl(0.04,0.04,0.64,M.metal,0,0.58,-1.05,tri);
+const handle = cyl(0.04,0.04,1.1,M.metal,0,1.18,-1.02,tri); handle.rotation.z = Math.PI/2;
+cyl(0.07,0.07,0.24,M.dark,-0.52,1.18,-1.02,tri).rotation.z = Math.PI/2;
+cyl(0.07,0.07,0.24,M.dark,0.52,1.18,-1.02,tri).rotation.z = Math.PI/2;
+sphere(0.13,M.yellow,0,1.02,-1.28,tri);
+cyl(0.04,0.04,0.5,M.metal,0,0.90,-0.55,tri);
+box(0.52,0.12,0.38,M.dark,0,1.18,-0.55,tri);
+const crank = cyl(0.04,0.04,0.56,M.metal,0,0.38,-0.32,tri); crank.rotation.z = Math.PI/2;
+box(0.18,0.05,0.24,M.dark,-0.30,0.28,-0.32,tri);
+box(0.18,0.05,0.24,M.dark,0.30,0.48,-0.32,tri);
+box(0.50,0.05,0.85,M.blue,0,0.76,-1.05,tri);
+box(0.30,0.05,0.85,M.blue,-0.62,0.76,0.55,tri);
+box(0.30,0.05,0.85,M.blue,0.62,0.76,0.55,tri);
+
+function wheel(x,y,z,r) {
+  const g = new THREE.Group(); g.position.set(x,y,z); tri.add(g);
+  const tire = cyl(r,r,0.14,M.tire,0,0,0,g); tire.rotation.z = Math.PI/2;
+  const rim = cyl(r*0.78,r*0.78,0.16,M.metal,0,0,0,g); rim.rotation.z = Math.PI/2;
+  cyl(0.09,0.09,0.20,M.blue,0,0,0,g).rotation.z = Math.PI/2;
+  for (let a=0;a<6;a++) {
+    const s = box(0.025,r*1.6,0.025,M.metal,0,0,0,g);
+    s.rotation.x = a*Math.PI/3;
+  }
+  return g;
+}
+const wheels = [ wheel(0,0.36,-1.05,0.36), wheel(-0.62,0.36,0.55,0.36), wheel(0.62,0.36,0.55,0.36) ];
+
+// Repartidor
+cyl(0.22,0.25,0.75,M.vest,0,1.42,-0.58,tri);
+sphere(0.22,M.skin,0,1.82,-0.58,tri);
+const armL = cyl(0.04,0.04,0.62,M.skin,-0.30,1.42,-0.82,tri); armL.rotation.set(0.6,0,-0.35);
+const armR = cyl(0.04,0.04,0.62,M.skin,0.30,1.42,-0.82,tri); armR.rotation.set(0.6,0,0.35);
+
+const waypoints = [
+  new THREE.Vector3(12,0,-11.2), new THREE.Vector3(4,0,-11.2),
+  new THREE.Vector3(0,0,-10.2) // se queda en el muelle; descarga en el almacén
+];
+let wp = 0;
+tri.position.copy(waypoints[0]);
+tri.rotation.y = Math.PI/2; // morro hacia la izquierda en la carretera
+
+const clock = new THREE.Clock();
+let viajeActivo = false;
+const estadoPedido = document.getElementById('estadoPedido');
+document.getElementById('botonPedido').addEventListener('click', () => {
+  if (viajeActivo) return;
+  wp = 0;
+  tri.position.copy(waypoints[0]);
+  tri.rotation.y = Math.PI/2;
+  viajeActivo = true;
+  estadoPedido.textContent = 'Pedido pagado · triciclo en camino';
+  estadoPedido.style.color = '#e6c759';
+});
+
+function animate() {
+  const dt = clock.getDelta();
+
+  if (viajeActivo) {
+    const target = waypoints[wp];
+    const dir = new THREE.Vector3().subVectors(target, tri.position); dir.y = 0;
+    if (dir.length() < 0.08) {
+      if (wp < waypoints.length - 1) {
+        wp++;
+      } else {
+        // Entregado: vuelve a aparcar hasta el siguiente pedido.
+        viajeActivo = false;
+        wp = 0;
+        tri.position.copy(waypoints[0]);
+        tri.rotation.y = Math.PI/2;
+        estadoPedido.textContent = 'Pedido entregado · triciclo aparcado';
+        estadoPedido.style.color = '#8fd6a5';
+      }
+    } else {
+      dir.normalize();
+      tri.position.addScaledVector(dir, Math.min(2.8*dt, dir.length()));
+      const ang = Math.atan2(-dir.x, -dir.z); // el modelo mira hacia -Z, no hacia +Z
+      tri.rotation.y += Math.atan2(Math.sin(ang-tri.rotation.y), Math.cos(ang-tri.rotation.y)) * Math.min(1, 5*dt);
+      wheels.forEach(w => w.rotation.x -= dt*9);
+    }
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

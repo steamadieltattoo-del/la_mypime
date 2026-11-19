@@ -1,0 +1,51 @@
+# ===== Unity =====
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+[Cc]rashlytics/
+
+# ===== Visual Studio / Rider / VS Code / Consulo =====
+.vs/
+.vscode/
+.idea/
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+ExportedObj/
+
+# ===== Builds =====
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# ===== Crashlytics =====
+crashlytics-build.properties
+
+# ===== Sistema operativo =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Varios =====
+*.log
+*.tmp
+*.bak
+sysinfo.txt

@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd5cf7b0f15fe5644a5a7a4178127285, type: 3}
+  m_Name: CatalogoPedidos
+  m_EditorClassIdentifier: Assembly-CSharp::OrderCatalog
+  productos:
+  - producto: {fileID: 11400000, guid: 6ca7cb1cb09c4ae47bd1394756402d50, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32
+  - producto: {fileID: 11400000, guid: e1f613d680daedf42b58f708eba49f57, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32
+  - producto: {fileID: 11400000, guid: 6eb5c3de9d869f84a9844a57f0793683, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32
+  - producto: {fileID: 11400000, guid: ab354daf8b2675d4b94715d5d5d42aa8, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32
+  - producto: {fileID: 11400000, guid: 49b97bf75349cb04182ba5084c052af2, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32
+  - producto: {fileID: 11400000, guid: 94df17b05be7d8149ad6feddd482ab5d, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32
+  - producto: {fileID: 11400000, guid: ac9b7ebb9965ef440ae1d48be011d7e7, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32
+  - producto: {fileID: 11400000, guid: 3230307e50b76fa4c8fc631efe09dd1c, type: 2}
+    activo: 1
+    lote: 8
+    maximo: 32

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LA MYPIME GAME — Storyboard animado</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #0e1116; color: #e8edf4;
+    font-family: "Segoe UI", Arial, sans-serif;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 18px; }
+  header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+  h1 { font-size: 20px; margin: 0; }
+  .badge {
+    background: #4a2a12; color: #ffc978; border: 1px solid #a35c1e;
+    padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  }
+  .sub { color: #8e9aab; font-size: 13px; }
+  .main { display: flex; gap: 16px; align-items: stretch; }
+  .stage { position: relative; flex: 1; min-width: 0; }
+  canvas {
+    width: 100%; height: auto; display: block; border-radius: 12px;
+    border: 1px solid #2c3644; background: #1a2028;
+  }
+  .hudtop {
+    position: absolute; top: 12px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; pointer-events: none;
+    font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px #000;
+  }
+  .hudgoal {
+    position: absolute; top: 44px; left: 14px; color: #9ff0b5;
+    font-size: 13px; font-weight: 700; text-shadow: 0 1px 3px #000; pointer-events: none;
+  }
+  .hudmsg {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+    background: rgba(6,10,15,.78); border: 1px solid #37455a;
+    padding: 7px 16px; border-radius: 8px; font-size: 14px; white-space: nowrap;
+    pointer-events: none;
+  }
+  .prompt {
+    position: absolute; left: 50%; top: 56%; transform: translateX(-50%);
+    color: #ffdc5e; font-weight: 700; font-size: 16px; text-shadow: 0 1px 4px #000;
+    pointer-events: none; white-space: nowrap;
+  }
+  .salesbtn {
+    position: absolute; top: 12px; right: 14px;
+    background: #2e6b9c; border: 1px solid #69a9d8; border-radius: 6px;
+    padding: 4px 10px; font-size: 12px; font-weight: 700; color: #eaf6ff;
+  }
+  aside {
+    width: 250px; flex: none; background: #151b23; border: 1px solid #2c3644;
+    border-radius: 12px; padding: 14px;
+  }
+  aside h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #8e9aab; margin: 0 0 10px; }
+  ol { list-style: none; margin: 0; padding: 0; }
+  li {
+    padding: 8px 9px; margin-bottom: 6px; border-radius: 7px; font-size: 13px;
+    color: #8390a2; border-left: 3px solid transparent; background: #111720;
+  }
+  li.active { color: #fff; background: #1d3a2b; border-left-color: #4ade80; }
+  .bar { height: 6px; background: #222c38; border-radius: 99px; overflow: hidden; margin: 12px 0 6px; }
+  .bar > i { display: block; height: 100%; background: #4ade80; width: 0%; }
+  .legend { font-size: 12px; color: #7d8999; line-height: 1.7; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  @media (max-width: 900px) { .main { flex-direction: column; } aside { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>LA MYPIME GAME — bucle de juego</h1>
+    <span class="badge">ILUSTRATIVO · NO ES FOOTAGE REAL DE UNITY</span>
+    <span class="sub">Minimercado · bucle 24 s · 8 muebles · carretera + almacén · USD 930 CUP</span>
+  </header>
+
+  <div class="main">
+    <div class="stage">
+      <canvas id="cv" width="900" height="600"></canvas>
+      <div class="hudtop">
+        <span id="hudLeft">Día 1 &nbsp; 46.500 CUP &nbsp; Ventas: 0 &nbsp; USD: 930,00 CUP &nbsp; Precios ×1.00</span>
+        <span id="hudRight">Tiempo: 03:00</span>
+      </div>
+      <div class="hudgoal" id="hudGoal">Meta: 0/27.900 CUP &nbsp; Alquiler: 18.600 &nbsp; Luz: 465 &nbsp; Sueldos: 0 &nbsp; Rep: 70% &nbsp; Atendidos: 0 &nbsp; Satisfechos: 0 &nbsp; Perdidos: 0</div>
+      <div class="prompt" id="prompt"></div>
+      <div class="hudmsg" id="msg"></div>
+      <div class="salesbtn">VENTAS (TAB)</div>
+      <div class="salesbtn" style="right: 150px; background:#2e6b3c; border-color:#69d88f;">CONTRATAR (H)</div>
+    </div>
+
+    <aside>
+      <h2>Fases</h2>
+      <ol id="steps">
+        <li data-phase="0">1 · Pedir stock al proveedor</li>
+        <li data-phase="1">2 · Reponer la estantería</li>
+        <li data-phase="2">3 · Cliente coge 2 productos</li>
+        <li data-phase="3">4 · Escanear en la cinta</li>
+        <li data-phase="4">5 · Cobrar y sumar dinero</li>
+        <li data-phase="5">6 · Cliente sale / reinicio</li>
+        <li data-phase="6">7 · Analítica de ventas (Tab)</li>
+        <li data-phase="7">8 · Cierre: sigue aparcado hasta el siguiente pedido</li>
+      </ol>
+      <div class="bar"><i id="progress"></i></div>
+      <div class="legend">
+        <div style="color:#ffc978;margin-bottom:6px">1 USD = 930 CUP (elTOQUE 18/11/2026) · varía ±0,8%/día</div>
+        <div style="color:#ffc978;margin-bottom:6px">Índice: tasa del día × inflación 8%/día (ficticia)</div>
+        <div><span class="dot" style="background:#4aa8ff"></span>Jugador</div>
+        <div><span class="dot" style="background:#ff8c42"></span>Cliente</div>
+        <div><span class="dot" style="background:#4ade80"></span>Acción correcta</div>
+        <div><span class="dot" style="background:#bcdcea"></span>Nevera: 465 CUP/día de luz</div>
+        <div>La leche se estropea en 45 s sin frío</div>
+        <div><span class="dot" style="background:#f2f2f2"></span>Cubo = producto favorito del cliente</div>
+        <div><span class="dot" style="background:#2e6b9c"></span>Tab = panel de analítica de ventas</div>
+        <div><span class="dot" style="background:#2e6b3c"></span>H = empleado: 13.950 + 11.160 CUP/día</div>
+        <div><span class="dot" style="background:#0d384c"></span>Entrada principal + cartel LA MYPIME · MINIMERCADO</div>
+        <div><span class="dot" style="background:#db2e26"></span>Colección cartoon: góndolas, nevera, congelador, caja, carrito, frescos y señales</div>
+        <div><span class="dot" style="background:#1a6b8c"></span>Computadora de pedidos en el almacén (catálogo configurable)</div>
+        <div><span class="dot" style="background:#9d7142"></span>4 estantes de almacén con 2 cajas de pedido cada uno</div>
+        <div><span class="dot" style="background:#9a9ea6"></span>Pared con puerta: separa la tienda del almacén</div>
+        <div><span class="dot" style="background:#3d78b8"></span>Triciclo solo cuando haces un pedido: deja esa mercancía en el almacén (no repone estantes)</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const DUR = 24;
+
+const playerPath = [
+  {t:0,    x:450, y:430},
+  {t:2.8,  x:200, y:470},
+  {t:3.8,  x:200, y:470},
+  {t:6.8,  x:230, y:190},
+  {t:8.6,  x:230, y:190},
+  {t:12.2, x:450, y:410},
+  {t:18.4, x:450, y:410},
+  {t:21.5, x:450, y:430},
+  {t:24,   x:450, y:430}
+];
+
+const clientPath = [
+  {t:5.5,  x:830, y:520},
+  {t:8.6,  x:230, y:185},
+  {t:9.3,  x:230, y:185},
+  {t:11.2, x:450, y:185},
+  {t:11.8, x:450, y:185},
+  {t:14.6, x:450, y:405},
+  {t:19.2, x:450, y:405},
+  {t:23.5, x:830, y:80}
+];
+
+function posAt(path, t) {
+  if (t <= path[0].t) return {x:path[0].x, y:path[0].y};
+  for (let i=1; i<path.length; i++) {
+    if (t <= path[i].t) {
+      const a = path[i-1], b = path[i];
+      const k = (t - a.t) / Math.max(0.001, b.t - a.t);
+      const e = k*k*(3-2*k);
+      return {x:a.x+(b.x-a.x)*e, y:a.y+(b.y-a.y)*e};
+    }
+  }
+  const last = path[path.length-1];
+  return {x:last.x, y:last.y};
+}
+
+function angleAt(path, t) {
+  const a = posAt(path, t), b = posAt(path, Math.min(DUR, t+0.15));
+  return Math.atan2(b.y-a.y, b.x-a.x);
+}
+
+function rr(x,y,w,h,r,color) {
+  ctx.beginPath();
+  ctx.roundRect(x,y,w,h,r);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function label(text, x, y, size, color, align) {
+  ctx.fillStyle = color || '#e8edf4';
+  ctx.font = (size||13) + 'px "Segoe UI", Arial, sans-serif';
+  ctx.textAlign = align || 'center';
+  ctx.fillText(text, x, y);
+}
+
+function drawFloor() {
+  ctx.fillStyle = '#232b35';
+  ctx.fillRect(30,30,840,540);
+  ctx.strokeStyle = '#2b3542';
+  ctx.lineWidth = 1;
+  for (let x=30; x<=870; x+=42) { ctx.beginPath(); ctx.moveTo(x,30); ctx.lineTo(x,570); ctx.stroke(); }
+  for (let y=30; y<=570; y+=42) { ctx.beginPath(); ctx.moveTo(30,y); ctx.lineTo(870,y); ctx.stroke(); }
+  ctx.strokeStyle = '#4b5a6d';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(30,30,840,540);
+
+  // Almacén (zona de descarga) y carretera exterior
+  ctx.fillStyle = '#2c323a';
+  ctx.fillRect(30,470,840,62);
+
+  // Pared divisoria con puerta central entre tienda y almacén
+  ctx.fillStyle = '#9a9ea6';
+  ctx.fillRect(30,466,400,8);
+  ctx.fillRect(500,466,370,8);
+  ctx.fillStyle = '#c8ccd2';
+  ctx.fillRect(426,462,10,12);
+  ctx.fillRect(494,462,10,12);
+  label('PUERTA ALMACÉN', 465, 456, 9, '#cfd6de');
+  label('ALMACÉN · 8 PEDIDOS', 115, 485, 10, '#c9d2dc');
+
+  ctx.fillStyle = '#171a1f';
+  ctx.fillRect(30,548,840,22);
+  ctx.fillStyle = '#d8c24a';
+  for (let x=50; x<860; x+=60) ctx.fillRect(x,558,26,2);
+  label('CARRETERA', 70, 562, 9, '#8a93a0');
+
+  ctx.fillStyle = '#6f7378';
+  ctx.fillRect(520,540,80,8);
+  label('MUELLE', 560, 536, 9, '#c8ccd2');
+
+  // Entrada principal en la pared norte (x=-8) con cartel del minimercado
+  ctx.fillStyle = '#16324a';
+  ctx.fillRect(190,30,80,66);
+  label('ENTRADA', 230, 68, 11, '#7fb6e8');
+  ctx.fillStyle = '#0d384c';
+  ctx.fillRect(150,8,140,20);
+  label('LA MYPIME · MINIMERCADO', 220, 18, 9, '#ffed9f');
+  label('SALIDA', 270, 74, 9, '#e8a07f');
+}
+
+function drawShelf(x, y, name, stock, color, highlight) {
+  rr(x-85, y-30, 170, 60, 8, highlight ? '#3a4a33' : '#4a3a2c');
+  rr(x-85, y-30, 170, 7, 3, '#6b5340');
+  label(name, x, y, 14, '#fff');
+  for (let i=0; i<8; i++) {
+    const col = i%4, row = Math.floor(i/4);
+    const px = x-66+col*35, py = y+12+row*16;
+    if (i < stock) { rr(px-6, py-8, 12, 13, 3, color); }
+    else { ctx.strokeStyle='#5c5147'; ctx.strokeRect(px-6,py-8,12,13); }
+  }
+}
+
+function drawBox(x, y, name, color, empty) {
+  rr(x-42, y-28, 84, 56, 6, empty ? '#3a3530' : '#8a6238');
+  label(name, x, y+4, 12, empty ? '#776f66' : '#fff');
+  if (!empty) rr(x-16, y-24, 32, 6, 2, color);
+}
+
+function drawCheckout(t, belt, flash) {
+  rr(345, 305, 210, 70, 8, '#6a4c30');
+  rr(360, 299, 150, 12, 4, '#22262c');
+  rr(515, 296, 30, 20, 4, flash ? '#ffe066' : '#4ade80');
+  label('CAJA / CINTA', 450, 345, 14, '#fff');
+  for (let i=0; i<belt; i++) {
+    rr(378+i*38, 283, 20, 22, 3, i===0 && t<15.5 ? '#f2f2f2' : '#e8b34a');
+  }
+  if (flash) {
+    ctx.beginPath();
+    ctx.arc(530, 306, 16, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,224,102,.35)';
+    ctx.fill();
+    label('BEEP', 530, 276, 12, '#ffe066');
+  }
+}
+
+function drawPerson(p, angle, color, name, carried, basket, dir) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(angle + Math.PI/2);
+  ctx.beginPath(); ctx.moveTo(0,-19); ctx.lineTo(9,11); ctx.lineTo(-9,11); ctx.closePath();
+  ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fill();
+  ctx.restore();
+
+  ctx.beginPath(); ctx.arc(p.x,p.y,15,0,Math.PI*2);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.strokeStyle = '#0d1117'; ctx.lineWidth = 2; ctx.stroke();
+  label(name, p.x, p.y-22, 11, '#dfe7f2');
+
+  if (carried > 0) {
+    const n = Math.min(5, Math.ceil(carried/2));
+    for (let i=0;i<n;i++) rr(p.x-13+i*6, p.y+13, 5, 9, 1, '#f2f2f2');
+  }
+  if (basket > 0) {
+    rr(p.x+13, p.y-4, 18, 16, 3, '#d99a2b');
+    for (let i=0;i<basket;i++) rr(p.x+16+i*7, p.y-8, 6, 7, 1, i===0?'#f2f2f2':'#e8b34a');
+  }
+  if (dir) label(dir, p.x, p.y+34, 10, '#8fa0b5');
+}
+
+function phaseOf(t) {
+  if (t < 3.2) return 0;
+  if (t < 8.2) return 1;
+  if (t < 14.5) return 2;
+  if (t < 17.9) return 3;
+  if (t < 19.2) return 4;
+  if (t < 19.5) return 5;
+  if (t < 21.5) return 6;
+  return 7;
+}
+
+function messageOf(t) {
+  if (t < 1.8)  return 'Pediste 8× Arroz en la computadora: el triciclo sale hacia el almacén';
+  if (t < 3.2)  return 'Apunta al pedido de Arroz y pulsa INTERACTUAR';
+  if (t < 3.9)  return 'Compraste 8× Arroz por 9.300 CUP';
+  if (t < 8.2)  return 'Llevas 8× Arroz → ve a la estantería';
+  if (t < 8.9)  return 'Repuestos 4× Arroz';
+  if (t < 11.3) return 'El cliente encontró su favorito (Arroz) · coge Arroz y Frijol';
+  if (t < 14.5) return 'El cliente espera en la caja · barra de paciencia';
+  if (t < 15.5) return 'Escanear Arroz (2 pendientes) · BEEP';
+  if (t < 16.8) return 'Escanear Frijol (1 pendiente) · BEEP';
+  if (t < 17.9) return 'Cobrar 6.510 CUP';
+  if (t < 19.2) return '¡Venta completada! +6.510 CUP';
+  if (t < 19.5) return 'El cliente sale · +1 reputación';
+  if (t < 21.5) return 'Analítica: 6.510 CUP hoy · Arroz ×1, Frijol ×1 · contrata con H';
+  return 'Cierre: alquiler 18.600 + luz 465 · triciclo aparcado hasta el próximo pedido · 1 USD = 930 CUP (varía mañana)';
+}
+
+function promptOf(t) {
+  if (t < 3.2)  return 'Pedir 8× Arroz (9.300 CUP)';
+  if (t < 8.2)  return 'Reponer Arroz ×8';
+  if (t < 14.5) return '';
+  if (t < 15.5) return 'Escanear Arroz (2 pendientes)';
+  if (t < 16.8) return 'Escanear Frijol (1 pendiente)';
+  if (t < 17.9) return 'Cobrar 6.510 CUP';
+  return '';
+}
+
+function drawFridge() {
+  const x = 790, y = 110, w = 80, h = 200;
+  rr(x, y, w, h, 7, '#bcdcea');
+  rr(x + 5, y + 30, w - 10, h - 36, 4, '#8fc4da');
+  label('NEVERA', x + w/2, y + 17, 12, '#22303a');
+  ctx.fillStyle = '#3fd45c';
+  ctx.beginPath();
+  ctx.arc(x + w - 12, y + 16, 5, 0, Math.PI * 2);
+  ctx.fill();
+  for (let i = 0; i < 3; i++) rr(x + 12 + i * 20, y + 70, 14, 42, 2, '#eef5fb');
+  label('LECHE', x + w/2, y + h - 22, 11, '#22303a');
+}
+
+function drawPatience(p, t) {
+  if (t < 14.5 || t > 17.9) return;
+  const k = Math.max(0, Math.min(1, 1 - (t - 14.5) / 4.2));
+  const x = p.x - 26, y = p.y - 96, w = 52;
+  ctx.fillStyle = '#222';
+  ctx.fillRect(x - 1, y - 1, w + 2, 9);
+  ctx.fillStyle = k > 0.4 ? '#3fd45c' : '#f24338';
+  ctx.fillRect(x, y, Math.max(1, w * k), 7);
+}
+
+function drawEmployee() {
+  const x = 120, y = 330;
+  ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI*2);
+  ctx.fillStyle = '#4a8cb8'; ctx.fill();
+  ctx.strokeStyle = '#0d1117'; ctx.lineWidth = 2; ctx.stroke();
+  rr(x - 10, y - 3, 20, 22, 3, '#f2b833');
+  label('EMPLEADO', x, y - 24, 11, '#bfe3ff');
+  label('reponiendo', x, y + 34, 10, '#8fa0b5');
+}
+
+function drawTricycle(t) {
+  // Solo viaja cuando se pagó un pedido (0-3,6 s en el storyboard); luego queda aparcado.
+  const k = t < 3.6 ? Math.max(0, Math.min(1, t / 2.2)) : 1;
+  const x = 850 - 290 * k, y = 560; // carretera exterior, nunca entre estanterías
+
+  // Ruedas con rin y radios
+  [{x:x-45,y:y,r:12},{x:x+30,y:y+2,r:14},{x:x+48,y:y+2,r:14}].forEach(w => {
+    ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI*2);
+    ctx.fillStyle = '#191b20'; ctx.fill();
+    ctx.strokeStyle = '#5a6470'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(w.x, w.y, w.r*0.55, 0, Math.PI*2);
+    ctx.strokeStyle = '#c8d0d8'; ctx.lineWidth = 2; ctx.stroke();
+    for (let a=0; a<6; a++) {
+      const ang = a*Math.PI/3;
+      ctx.beginPath(); ctx.moveTo(w.x, w.y);
+      ctx.lineTo(w.x+Math.cos(ang)*w.r*0.8, w.y+Math.sin(ang)*w.r*0.8);
+      ctx.strokeStyle = '#8d99a6'; ctx.lineWidth = 1; ctx.stroke();
+    }
+  });
+
+  // Caja de carga, chasis y dirección
+  rr(x+8, y-46, 46, 30, 4, '#2a6ca8');
+  rr(x+8, y-20, 46, 8, 2, '#d9ad33');
+  ctx.strokeStyle = '#9fd0ff'; ctx.lineWidth = 2; ctx.strokeRect(x+8, y-46, 46, 26);
+  rr(x-38, y-16, 82, 6, 3, '#b9c2cc');
+  rr(x-30, y-30, 70, 5, 2, '#b9c2cc');
+  rr(x-46, y-52, 6, 36, 2, '#2a6ca8');
+  rr(x-58, y-56, 26, 5, 2, '#b9c2cc');
+  ctx.beginPath(); ctx.arc(x-60, y-50, 6, 0, Math.PI*2);
+  ctx.fillStyle = '#fff2a8'; ctx.fill();
+  rr(x-12, y-34, 18, 6, 3, '#1b1b1f');
+
+  // Repartidor
+  ctx.beginPath(); ctx.arc(x-14, y-60, 10, 0, Math.PI*2);
+  ctx.fillStyle = '#e8a83a'; ctx.fill();
+  ctx.beginPath(); ctx.arc(x-14, y-74, 7, 0, Math.PI*2);
+  ctx.fillStyle = '#d9a679'; ctx.fill();
+  rr(x-32, y-58, 20, 5, 2, '#d9a679');
+
+  const momento = t < 3.6 ? 'AMANECER' : 'ANTES DE CERRAR';
+  label('TRICICLO · ' + momento, x, y - 92, 10, '#9fd0ff');
+  label('DEJA 8 PEDIDOS EN EL ALMACÉN', x, y - 78, 9, '#e8c86b');
+}
+
+function drawAnalytics(t) {
+  if (t < 19.5 || t >= 21.5) return;
+  const x = 250, y = 130, w = 400, h = 330;
+  ctx.fillStyle = 'rgba(6,10,16,.94)';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#3c7fb5'; ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  label('ANALÍTICA DE VENTAS', x + w/2, y + 30, 17, '#bfe3ff');
+  label('────────────────────────', x + w/2, y + 42, 12, '#3c7fb5');
+  label('HOY   6.510 CUP   ·   2 uds', x + w/2, y + 68, 15, '#fff');
+  label('Por producto (hoy)', x + 20, y + 98, 13, '#9fb6cb', 'left');
+  label('Arroz', x + 30, y + 122, 13, '#f2f2f2', 'left');
+  label('1 uds   2.790 CUP', x + w - 20, y + 122, 13, '#e8edf4', 'right');
+  label('Frijol', x + 30, y + 146, 13, '#e8a07f', 'left');
+  label('1 uds   3.720 CUP', x + w - 20, y + 146, 13, '#e8edf4', 'right');
+  label('Acumulado: Arroz ×1 · Frijol ×1', x + w/2, y + 180, 12, '#8fa0b5');
+  label('Últimos días: sin historial', x + w/2, y + 202, 12, '#8fa0b5');
+  label('Pulsa TAB para cerrar', x + w/2, y + h - 18, 11, '#5f7185');
+}
+
+const steps = [...document.querySelectorAll('#steps li')];
+
+function render(t) {
+  const leche = t < 8.2 ? 2 : (t < 8.7 ? 6 : 5);
+  const pan   = t < 11.3 ? 3 : 2;
+  const money = t < 3.2 ? 46500 : (t < 18 ? 37200 : 43710);
+  const sales = t < 18 ? 0 : 6510;
+  const carried = (t>=3.2 && t<8.2) ? 8 : ((t>=8.2 && t<12.2) ? 4 : 0);
+  const basket = t<8.7 ? 0 : (t<11.3 ? 1 : 2);
+  const belt = t<14.5 ? 0 : (t<15.5 ? 2 : (t<16.8 ? 1 : 0));
+  const flash = (t>15.3 && t<15.9) || (t>16.6 && t<17.2);
+
+  ctx.clearRect(0,0,900,600);
+  drawFloor();
+  drawShelf(230,120,'ARROZ',leche,'#f2f2f2',t>6.8&&t<8.9);
+  drawShelf(450,120,'FRIJOL',pan,'#7a2b22',t>10.8&&t<11.8);
+  drawShelf(670,120,'CAFÉ',4,'#553322',false);
+  drawShelf(115,250,'AZÚCAR',4,'#fafafa',false);
+  drawShelf(115,340,'ACEITE',3,'#e8b83a',false);
+  drawShelf(785,350,'PAN',4,'#d99a2b',false);
+  drawShelf(785,435,'TOMATE',3,'#d9574a',false);
+  drawFridge();
+  drawBox(200,505,'PEDIDO ARROZ','#f2f2f2',t>=3.2);
+  drawBox(450,505,'PEDIDO FRIJOL','#7a2b22',false);
+  drawBox(700,505,'PEDIDO CAFÉ','#553322',false);
+  drawCheckout(t,belt,flash);
+
+  if (t >= 5.5 && t <= 23.5) {
+    const cp = posAt(clientPath,t);
+    drawPerson(cp, angleAt(clientPath,t), '#ff8c42', 'CLIENTE', 0, basket,
+      t>14.5&&t<19.2 ? 'Esperando cobro' : '');
+    if (t < 11.3) {
+      ctx.fillStyle = '#f2f2f2';
+      ctx.fillRect(cp.x - 9, cp.y - 126, 18, 18);
+      ctx.strokeStyle = '#8a8f98';
+      ctx.strokeRect(cp.x - 9, cp.y - 126, 18, 18);
+    }
+    drawPatience(cp, t);
+  }
+  const pp = posAt(playerPath,t);
+  drawPerson(pp, angleAt(playerPath,t), '#4aa8ff', 'JUGADOR', carried, 0, '');
+  if (t >= 19.5) drawEmployee();
+  drawAnalytics(t);
+  if (t < 3.6) drawTricycle(t); // solo viaja cuando se pagó el pedido
+
+  const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  document.getElementById('hudLeft').textContent =
+    `Día 1   ${fmt(money)} CUP   Ventas: ${fmt(sales)}   USD: 930,00 CUP   Precios ×1.00`;
+  const remaining = Math.max(0, 180 - Math.floor(t*1.5));
+  document.getElementById('hudRight').textContent =
+    `Tiempo: ${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`;
+  const meta = t < 18 ? 0 : 6510;
+  const atendidos = t < 19 ? 0 : 1;
+  document.getElementById('hudGoal').textContent =
+    `Meta: ${fmt(meta)}/27.900 CUP   Alquiler: 18.600   Luz: 465   Sueldos: 0   Rep: ${t < 18 ? 70 : 71}%   Atendidos: ${atendidos}   Satisfechos: ${atendidos}   Perdidos: 0`;
+  document.getElementById('msg').textContent = messageOf(t);
+  document.getElementById('prompt').textContent = promptOf(t);
+  document.getElementById('progress').style.width = (t/DUR*100).toFixed(1)+'%';
+
+  const ph = phaseOf(t);
+  steps.forEach((li,i) => li.classList.toggle('active', i===ph));
+}
+
+let start = performance.now();
+function frame(now) {
+  const t = ((now - start)/1000) % DUR;
+  render(t);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

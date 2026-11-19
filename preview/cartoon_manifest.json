@@ -1,0 +1,477 @@
+{
+  "Bolsa_Snacks": {
+    "file": "Bolsa_Snacks.fbx",
+    "meshes": 3,
+    "size": [
+      0.145,
+      0.062,
+      0.202
+    ],
+    "min": [
+      -1.472,
+      -12.03,
+      0.005
+    ],
+    "max": [
+      -1.327,
+      -11.968,
+      0.207
+    ]
+  },
+  "Botella_Zumo": {
+    "file": "Botella_Zumo.fbx",
+    "meshes": 4,
+    "size": [
+      0.089,
+      0.094,
+      0.289
+    ],
+    "min": [
+      -4.745,
+      -12.047,
+      0.0
+    ],
+    "max": [
+      -4.655,
+      -11.953,
+      0.289
+    ]
+  },
+  "Brik_Leche": {
+    "file": "Brik_Leche.fbx",
+    "meshes": 3,
+    "size": [
+      0.195,
+      0.195,
+      0.237
+    ],
+    "min": [
+      -3.148,
+      -12.098,
+      0.0
+    ],
+    "max": [
+      -2.952,
+      -11.902,
+      0.237
+    ]
+  },
+  "Caja_01": {
+    "file": "Caja_01.fbx",
+    "meshes": 21,
+    "size": [
+      2.2,
+      0.875,
+      1.54
+    ],
+    "min": [
+      -9.05,
+      -2.555,
+      0.0
+    ],
+    "max": [
+      -6.85,
+      -1.68,
+      1.54
+    ]
+  },
+  "Caja_Cereales": {
+    "file": "Caja_Cereales.fbx",
+    "meshes": 3,
+    "size": [
+      0.18,
+      0.125,
+      0.28
+    ],
+    "min": [
+      -8.09,
+      -12.06,
+      0.0
+    ],
+    "max": [
+      -7.91,
+      -11.935,
+      0.28
+    ]
+  },
+  "Caja_Manzanas": {
+    "file": "Caja_Manzanas.fbx",
+    "meshes": 43,
+    "size": [
+      0.95,
+      0.658,
+      0.328
+    ],
+    "min": [
+      -8.475,
+      -5.933,
+      0.015
+    ],
+    "max": [
+      -7.525,
+      -5.275,
+      0.343
+    ]
+  },
+  "Caja_Naranjas": {
+    "file": "Caja_Naranjas.fbx",
+    "meshes": 43,
+    "size": [
+      0.95,
+      0.658,
+      0.315
+    ],
+    "min": [
+      -6.975,
+      -5.933,
+      0.015
+    ],
+    "max": [
+      -6.025,
+      -5.275,
+      0.33
+    ]
+  },
+  "Caja_Verduras": {
+    "file": "Caja_Verduras.fbx",
+    "meshes": 53,
+    "size": [
+      0.95,
+      0.658,
+      0.33
+    ],
+    "min": [
+      -5.475,
+      -5.933,
+      0.015
+    ],
+    "max": [
+      -4.525,
+      -5.275,
+      0.345
+    ]
+  },
+  "Carrito": {
+    "file": "Carrito.fbx",
+    "meshes": 31,
+    "size": [
+      0.6,
+      0.881,
+      1.063
+    ],
+    "min": [
+      -5.3,
+      -2.503,
+      0.013
+    ],
+    "max": [
+      -4.7,
+      -1.622,
+      1.077
+    ]
+  },
+  "Cesta_Mano": {
+    "file": "Cesta_Mano.fbx",
+    "meshes": 9,
+    "size": [
+      0.38,
+      0.28,
+      0.391
+    ],
+    "min": [
+      -3.19,
+      -2.24,
+      0.047
+    ],
+    "max": [
+      -2.81,
+      -1.96,
+      0.438
+    ]
+  },
+  "Congelador": {
+    "file": "Congelador.fbx",
+    "meshes": 12,
+    "size": [
+      1.47,
+      0.838,
+      1.2
+    ],
+    "min": [
+      -5.735,
+      0.962,
+      0.0
+    ],
+    "max": [
+      -4.265,
+      1.8,
+      1.2
+    ]
+  },
+  "Devolucion": {
+    "file": "Devolucion.fbx",
+    "meshes": 8,
+    "size": [
+      1.25,
+      0.96,
+      1.71
+    ],
+    "min": [
+      -1.125,
+      -2.58,
+      0.0
+    ],
+    "max": [
+      0.125,
+      -1.62,
+      1.71
+    ]
+  },
+  "Estanteria_Bebidas": {
+    "file": "Estanteria_Bebidas.fbx",
+    "meshes": 103,
+    "size": [
+      1.245,
+      0.691,
+      1.97
+    ],
+    "min": [
+      -2.622,
+      4.68,
+      0.0
+    ],
+    "max": [
+      -1.377,
+      5.371,
+      1.97
+    ]
+  },
+  "Estanteria_Ofertas": {
+    "file": "Estanteria_Ofertas.fbx",
+    "meshes": 103,
+    "size": [
+      1.245,
+      0.691,
+      1.97
+    ],
+    "min": [
+      -8.623,
+      4.68,
+      0.0
+    ],
+    "max": [
+      -7.378,
+      5.371,
+      1.97
+    ]
+  },
+  "Expositor_Oferta": {
+    "file": "Expositor_Oferta.fbx",
+    "meshes": 61,
+    "size": [
+      0.9,
+      0.9,
+      1.66
+    ],
+    "min": [
+      0.55,
+      -6.05,
+      0.0
+    ],
+    "max": [
+      1.45,
+      -5.15,
+      1.66
+    ]
+  },
+  "Gondola_Dulces": {
+    "file": "Gondola_Dulces.fbx",
+    "meshes": 200,
+    "size": [
+      1.2,
+      1.062,
+      1.97
+    ],
+    "min": [
+      0.4,
+      4.469,
+      0.0
+    ],
+    "max": [
+      1.6,
+      5.531,
+      1.97
+    ]
+  },
+  "Gondola_Frescos": {
+    "file": "Gondola_Frescos.fbx",
+    "meshes": 200,
+    "size": [
+      1.2,
+      1.062,
+      1.97
+    ],
+    "min": [
+      -5.6,
+      4.469,
+      0.0
+    ],
+    "max": [
+      -4.4,
+      5.531,
+      1.97
+    ]
+  },
+  "Lata_Refresco": {
+    "file": "Lata_Refresco.fbx",
+    "meshes": 3,
+    "size": [
+      0.118,
+      0.124,
+      0.166
+    ],
+    "min": [
+      -6.409,
+      -12.062,
+      0.0
+    ],
+    "max": [
+      -6.291,
+      -11.938,
+      0.166
+    ]
+  },
+  "Mesa_Productos": {
+    "file": "Mesa_Productos.fbx",
+    "meshes": 115,
+    "size": [
+      10.5,
+      1.1,
+      0.717
+    ],
+    "min": [
+      -8.75,
+      -9.55,
+      0.0
+    ],
+    "max": [
+      1.75,
+      -8.45,
+      0.717
+    ]
+  },
+  "Nevera_Lacteos": {
+    "file": "Nevera_Lacteos.fbx",
+    "meshes": 91,
+    "size": [
+      1.18,
+      0.778,
+      2.12
+    ],
+    "min": [
+      -8.59,
+      1.05,
+      0.0
+    ],
+    "max": [
+      -7.41,
+      1.827,
+      2.12
+    ]
+  },
+  "Pack_Agua": {
+    "file": "Pack_Agua.fbx",
+    "meshes": 13,
+    "size": [
+      0.34,
+      0.12,
+      0.25
+    ],
+    "min": [
+      0.08,
+      -12.06,
+      -0.005
+    ],
+    "max": [
+      0.42,
+      -11.94,
+      0.245
+    ]
+  },
+  "Senal_Pasillo": {
+    "file": "Senal_Pasillo.fbx",
+    "meshes": 5,
+    "size": [
+      1.65,
+      0.195,
+      1.9
+    ],
+    "min": [
+      -8.65,
+      -14.265,
+      0.0
+    ],
+    "max": [
+      -7.0,
+      -14.07,
+      1.9
+    ]
+  },
+  "Senal_Promo": {
+    "file": "Senal_Promo.fbx",
+    "meshes": 5,
+    "size": [
+      1.65,
+      0.195,
+      1.9
+    ],
+    "min": [
+      -5.15,
+      -14.265,
+      0.0
+    ],
+    "max": [
+      -3.5,
+      -14.07,
+      1.9
+    ]
+  },
+  "Senal_Salida": {
+    "file": "Senal_Salida.fbx",
+    "meshes": 5,
+    "size": [
+      1.65,
+      0.195,
+      1.9
+    ],
+    "min": [
+      -1.65,
+      -14.265,
+      0.0
+    ],
+    "max": [
+      -0.0,
+      -14.07,
+      1.9
+    ]
+  },
+  "Vitrina_Frescos": {
+    "file": "Vitrina_Frescos.fbx",
+    "meshes": 31,
+    "size": [
+      1.35,
+      0.878,
+      1.466
+    ],
+    "min": [
+      -2.675,
+      1.0,
+      0.0
+    ],
+    "max": [
+      -1.325,
+      1.878,
+      1.466
+    ]
+  }
+}

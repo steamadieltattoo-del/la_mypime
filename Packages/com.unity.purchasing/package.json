@@ -1,0 +1,8 @@
+{
+  "name": "com.unity.purchasing",
+  "displayName": "Purchasing (stub local)",
+  "version": "4.15.0",
+  "unity": "6000.0",
+  "description": "Paquete local mínimo para resolución sin conexión. El juego no compras integradas.",
+  "dependencies": {}
+}

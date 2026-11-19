@@ -1,0 +1,8 @@
+{
+  "name": "com.unity.analytics",
+  "displayName": "Analytics (stub local)",
+  "version": "3.8.2",
+  "unity": "6000.0",
+  "description": "Paquete local mínimo para resolución sin conexión. El juego no usa analytics.",
+  "dependencies": {}
+}
