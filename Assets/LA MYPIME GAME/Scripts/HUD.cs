@@ -21,6 +21,8 @@ public class HUD : MonoBehaviour
     public Text empleadosText;
     public RectTransform hireButton;
     public RectTransform fireButton;
+    [Tooltip("Botón para abrir la tienda de muebles y ampliaciones")]
+    public RectTransform tiendaButton;
 
     private float messageTimer;
 
@@ -42,9 +44,13 @@ public class HUD : MonoBehaviour
 
     void Update()
     {
-        if ((GameManager.Instance == null || !GameManager.Instance.gameOver) && !OrderComputerUI.Abierto)
+        if ((GameManager.Instance == null || !GameManager.Instance.gameOver)
+            && !OrderComputerUI.Abierto && !StoreUI.Abierto)
         {
             if (Input.GetKeyDown(KeyCode.Tab)) ToggleAnalytics();
+
+            if (Input.GetKeyDown(KeyCode.B) && StoreUI.Instance != null)
+                StoreUI.Instance.OpenMuebles(null);
 
             if (GameManager.Instance != null && Input.GetKeyDown(KeyCode.H))
             {
@@ -59,6 +65,8 @@ public class HUD : MonoBehaviour
                 if (UiClicked(analyticsButton)) ToggleAnalytics();
                 if (UiClicked(hireButton)) GameManager.Instance.ContratarEmpleado();
                 if (UiClicked(fireButton)) GameManager.Instance.DespedirEmpleado();
+                if (UiClicked(tiendaButton) && StoreUI.Instance != null)
+                    StoreUI.Instance.OpenMuebles(null);
             }
         }
 

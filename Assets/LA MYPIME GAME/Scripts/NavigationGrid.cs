@@ -46,10 +46,12 @@ public class NavigationGrid : MonoBehaviour
             if (col == null) continue;
             string nombre = col.gameObject.name;
             bool esPared = nombre.StartsWith("Pared") && !nombre.Contains("dintel");
+            bool esPersiana = nombre.StartsWith("Persiana");
             if (col.GetComponentInParent<Shelf>() == null &&
                 col.GetComponentInParent<DeliveryBox>() == null &&
                 col.GetComponentInParent<Checkout>() == null &&
-                !esPared) continue;
+                col.GetComponentInParent<StoreTablet>() == null &&
+                !esPared && !esPersiana) continue;
 
             Bounds b = col.bounds;
             b.Expand(new Vector3(inflation * 2f, 0f, inflation * 2f));

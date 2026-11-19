@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
     public int alquilerBase = Currency.CUP(20f);
     public int metaVentas = Currency.CUP(30f);
     public int alquiler = Currency.CUP(20f);
+    [Tooltip("Parte del alquiler que aportan las ampliaciones compradas")]
+    public int alquilerAmpliacion;
     [Tooltip("Gasto diario de las neveras encendidas")]
     public int electricidad;
 
@@ -69,6 +71,10 @@ public class GameManager : MonoBehaviour
     public List<Employee> employeesNpc = new List<Employee>();
     public Checkout checkout;
     public DeliveryTricycle triciclo;
+    [Tooltip("Tienda de muebles y ampliaciones del local")]
+    public StoreManager tienda;
+    [Tooltip("Generador de clientes (su límite crece con las ampliaciones)")]
+    public CustomerSpawner spawner;
 
     [Header("Pedidos por computadora")]
     [Tooltip("Productos que se pueden pedir. Se edita en Assets/LA MYPIME GAME/Data/CatalogoPedidos.asset")]
@@ -101,7 +107,17 @@ public class GameManager : MonoBehaviour
     void CalcularObjetivos()
     {
         metaVentas = Mathf.Max(1, Mathf.RoundToInt(metaBase * indicePrecios));
-        alquiler = Mathf.Max(1, Mathf.RoundToInt(alquilerBase * indicePrecios));
+
+        // Las ampliaciones suben el alquiler diario, como en Supermarket Simulator.
+        alquilerAmpliacion = StoreManager.Instance != null ? StoreManager.Instance.AlquilerExtra : 0;
+        alquiler = Mathf.Max(1, Mathf.RoundToInt(alquilerBase * indicePrecios)) + alquilerAmpliacion;
+    }
+
+    /// <summary>Recalcula meta y gastos cuando cambia algo del local.</summary>
+    public void RecalcularGastos()
+    {
+        CalcularObjetivos();
+        Notify();
     }
 
     /// <summary>Suma el consumo de las neveras que estén encendidas.</summary>

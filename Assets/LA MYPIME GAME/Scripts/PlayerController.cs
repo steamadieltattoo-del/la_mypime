@@ -49,8 +49,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // Con la computadora de pedidos abierta, el jugador no se mueve ni interacts.
-        if (OrderComputerUI.Abierto || OrderComputerUI.CerroAhora) return;
+        // Con la computadora o la tienda de muebles abiertas, el jugador no se mueve ni interactúa.
+        if (OrderComputerUI.Abierto || OrderComputerUI.CerroAhora ||
+            StoreUI.Abierto || StoreUI.CerroAhora) return;
 
         HandleLook();
         HandleMove();

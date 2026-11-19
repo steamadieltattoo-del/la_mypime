@@ -99,8 +99,14 @@ public static class SceneBuilder
         Cube("Pared sur izq", new Vector3(-6f, 1.75f, -8f), new Vector3(8f, 3.5f, 0.3f), wallMat);
         Cube("Pared sur der", new Vector3(6f, 1.75f, -8f), new Vector3(8f, 3.5f, 0.3f), wallMat);
         Cube("Pared sur dintel", new Vector3(0f, 2.9f, -8f), new Vector3(4f, 1.2f, 0.3f), wallMat);
-        Cube("Pared este", new Vector3(10f, 1.75f, 2f), new Vector3(0.3f, 3.5f, 20f), wallMat);
-        Cube("Pared oeste", new Vector3(-10f, 1.75f, 2f), new Vector3(0.3f, 3.5f, 20f), wallMat);
+        // Paredes este/oeste partidas: dejan un hueco central (z 5,5 a 9) para
+        // las ampliaciones laterales. La persiana metálica lo cierra hasta comprarlas.
+        Cube("Pared este sur", new Vector3(10f, 1.75f, -1.25f), new Vector3(0.3f, 3.5f, 13.5f), wallMat);
+        Cube("Pared este norte", new Vector3(10f, 1.75f, 10.5f), new Vector3(0.3f, 3.5f, 3f), wallMat);
+        Cube("Pared este dintel", new Vector3(10f, 2.9f, 7.25f), new Vector3(0.3f, 1.2f, 3.5f), wallMat);
+        Cube("Pared oeste sur", new Vector3(-10f, 1.75f, -1.25f), new Vector3(0.3f, 3.5f, 13.5f), wallMat);
+        Cube("Pared oeste norte", new Vector3(-10f, 1.75f, 10.5f), new Vector3(0.3f, 3.5f, 3f), wallMat);
+        Cube("Pared oeste dintel", new Vector3(-10f, 2.9f, 7.25f), new Vector3(0.3f, 1.2f, 3.5f), wallMat);
 
         // Pared interior: separa la tienda del almacén con una puerta central de 3 m.
         Cube("Pared almacen izq", new Vector3(-5.75f, 1.75f, -3f), new Vector3(8.5f, 3.5f, 0.3f), wallMat);
@@ -194,6 +200,38 @@ public static class SceneBuilder
 
         // --- Elementos reales de Cartoon_Supermarket_Collection.blend (sin colisionadores) ---
         CreateCartoonSupermarket();
+
+        // --- Tienda, huecos de obra y ampliaciones laterales ---
+        // Dos huecos libres en el pasillo central desde el día 1. Las ampliaciones
+        // Este y Oeste añaden alas nuevas cerradas por una persiana.
+        List<BuildSpot> buildSpots = new List<BuildSpot>();
+        List<ExpansionZone> expansiones = new List<ExpansionZone>();
+
+        buildSpots.Add(CreateBuildSpot(0, "Pasillo central · derecha",
+            new Vector3(0f, 0f, 6.4f), 0f, null));
+        buildSpots.Add(CreateBuildSpot(1, "Pasillo central · izquierda",
+            new Vector3(-4.2f, 0f, 6.4f), 0f, null));
+
+        expansiones.Add(CreateExpansion(0, true, buildSpots));
+        expansiones.Add(CreateExpansion(1, false, buildSpots));
+
+        GameObject storeGo = new GameObject("TiendaMuebles");
+        StoreManager tienda = storeGo.AddComponent<StoreManager>();
+        if (tienda.spots == null) tienda.spots = new List<BuildSpot>();
+        if (tienda.expansiones == null) tienda.expansiones = new List<ExpansionZone>();
+        if (tienda.productos == null) tienda.productos = new List<ProductData>();
+        tienda.spots.AddRange(buildSpots);
+        tienda.expansiones.AddRange(expansiones);
+        tienda.productos.AddRange(new[]
+        {
+            arroz, frijoles, cafe, leche, azucar, aceite, pan, tomate
+        });
+        tienda.clientesBase = 4;
+        manager.tienda = tienda;
+
+        // Tablet de gestión junto a la entrada de la tienda (abre la misma pantalla).
+        CreateStoreTablet(woodMat);
+
 
         // --- Zona de almacén: 4 estantes metálicos con 2 cajas cada uno.
         // El triciclo deja la mercancía en las cajas; el jugador o un empleado la
@@ -320,8 +358,11 @@ public static class SceneBuilder
         tri.SetActive(false);
 
         // --- Grid de navegación (los clientes esquivan estanterías) ---
+        // Cubre también las alas Este/Oeste para que los muebles nuevos sean accesibles.
         GameObject navGo = new GameObject("NavigationGrid");
         NavigationGrid nav = navGo.AddComponent<NavigationGrid>();
+        nav.min = new Vector2(-16.5f, -7f);
+        nav.max = new Vector2(16.5f, 11f);
         nav.Build();
 
         // --- Clientes ---
@@ -333,6 +374,7 @@ public static class SceneBuilder
         spawner.exitPoint = salida.transform;
         spawner.interval = 7f;
         spawner.maxCustomers = 4;
+        manager.spawner = spawner;
 
         // --- Empleados repositores (inactivos hasta contratarlos) ---
         for (int i = 0; i < manager.maxEmpleados; i++)
@@ -926,6 +968,171 @@ public static class SceneBuilder
         }
     }
 
+    /// <summary>
+    /// Hueco de obra con cartel: al interactuar se abre la tienda de muebles y,
+    /// al comprar, el mueble se construye justo aquí. La zona táctil es un trigger
+    /// para que el jugador pueda atravesar el cartel mientras no hay mueble.
+    /// </summary>
+    static BuildSpot CreateBuildSpot(int id, string etiqueta, Vector3 pos, float yaw, Transform parent)
+    {
+        Material madera = Mat("ObraMadera", new Color(0.60f, 0.46f, 0.28f));
+        Material amarillo = Mat("ObraAmarillo", new Color(0.94f, 0.72f, 0.12f));
+        Material negro = Mat("ObraNegro", new Color(0.13f, 0.13f, 0.15f));
+
+        GameObject go = new GameObject("HuecoObra_" + id + "_" + etiqueta);
+        go.transform.position = pos;
+        go.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        if (parent != null) go.transform.SetParent(parent, true);
+
+        GameObject obra = new GameObject("Obra");
+        obra.transform.SetParent(go.transform, false);
+
+        CubeChild(obra, "Base", new Vector3(0f, 0.04f, 0f), new Vector3(2.4f, 0.08f, 0.95f), madera);
+        CubeChild(obra, "PosteIzq", new Vector3(-1.05f, 0.70f, 0f), new Vector3(0.08f, 1.4f, 0.08f), madera);
+        CubeChild(obra, "PosteDer", new Vector3(1.05f, 0.70f, 0f), new Vector3(0.08f, 1.4f, 0.08f), madera);
+        CubeChild(obra, "Cartel", new Vector3(0f, 1.42f, 0f), new Vector3(2.1f, 0.60f, 0.07f), amarillo);
+        CubeChild(obra, "FranjaIzq", new Vector3(-0.88f, 1.42f, -0.05f), new Vector3(0.18f, 0.60f, 0.02f), negro);
+        CubeChild(obra, "FranjaDer", new Vector3(0.88f, 1.42f, -0.05f), new Vector3(0.18f, 0.60f, 0.02f), negro);
+
+        GameObject textoGo = new GameObject("TextoObra");
+        textoGo.transform.SetParent(obra.transform, false);
+        textoGo.transform.localPosition = new Vector3(0f, 1.42f, -0.06f);
+        textoGo.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+        TextMesh tm = textoGo.AddComponent<TextMesh>();
+        tm.text = "OBRA";
+        tm.fontSize = 64;
+        tm.characterSize = 0.07f;
+        tm.anchor = TextAnchor.MiddleCenter;
+        tm.alignment = TextAlignment.Center;
+        tm.color = new Color(0.10f, 0.08f, 0.04f);
+
+        BoxCollider zona = go.AddComponent<BoxCollider>();
+        zona.size = new Vector3(2.5f, 2.3f, 1.8f);
+        zona.center = new Vector3(0f, 1.15f, 0f);
+        zona.isTrigger = true;
+
+        BuildSpot spot = go.AddComponent<BuildSpot>();
+        spot.id = id;
+        spot.etiqueta = etiqueta;
+        spot.obra = obra;
+        spot.zona = zona;
+        return spot;
+    }
+
+    /// <summary>
+    /// Ala nueva de 6 × 9 m pegada al local. Nace cerrada por una persiana
+    /// metálica; al comprarla se retira y quedan jugables sus huecos de muebles.
+    /// </summary>
+    static ExpansionZone CreateExpansion(int id, bool este, List<BuildSpot> todos)
+    {
+        float sx = este ? 1f : -1f;
+        string lado = este ? "Este" : "Oeste";
+
+        Material suelo = Mat("SueloAmpliacion", new Color(0.70f, 0.66f, 0.58f));
+        Material pared = Mat("Pared", new Color(0.90f, 0.90f, 0.94f));
+        Material persiana = Mat("PersianaMetal", new Color(0.66f, 0.70f, 0.74f));
+        Material persianaOsc = Mat("PersianaOscura", new Color(0.40f, 0.44f, 0.48f));
+        Material cartel = Mat("CartelAmpliacion", new Color(0.78f, 0.56f, 0.16f));
+
+        GameObject root = new GameObject("Ampliacion " + lado);
+
+        Cube("Suelo ampliacion " + lado, new Vector3(sx * 13f, -0.15f, 6.5f),
+            new Vector3(6f, 0.3f, 9f), suelo).transform.SetParent(root.transform, true);
+        Cube("Pared ampliacion " + lado + " exterior", new Vector3(sx * 16f, 1.75f, 6.5f),
+            new Vector3(0.3f, 3.5f, 9f), pared).transform.SetParent(root.transform, true);
+        Cube("Pared ampliacion " + lado + " norte", new Vector3(sx * 13f, 1.75f, 11f),
+            new Vector3(6f, 3.5f, 0.3f), pared).transform.SetParent(root.transform, true);
+        Cube("Pared ampliacion " + lado + " sur", new Vector3(sx * 13f, 1.75f, 2f),
+            new Vector3(6f, 3.5f, 0.3f), pared).transform.SetParent(root.transform, true);
+
+        // Persiana que sella el paso hasta que se compre la ampliación.
+        GameObject persianaGo = new GameObject("Persiana " + lado);
+        persianaGo.transform.position = new Vector3(sx * 10f, 0f, 7.25f);
+        persianaGo.transform.SetParent(root.transform, true);
+        BoxCollider pcol = persianaGo.AddComponent<BoxCollider>();
+        pcol.size = new Vector3(0.36f, 2.35f, 3.5f);
+        pcol.center = new Vector3(0f, 1.175f, 0f);
+        for (int i = 0; i < 7; i++)
+            CubeChild(persianaGo, "Lamina " + (i + 1), new Vector3(0f, 0.22f + i * 0.30f, 0f),
+                new Vector3(0.30f, 0.25f, 3.44f), i % 2 == 0 ? persiana : persianaOsc);
+        CubeChild(persianaGo, "GuiaIzq", new Vector3(0f, 1.18f, -1.78f),
+            new Vector3(0.40f, 2.36f, 0.10f), persianaOsc);
+        CubeChild(persianaGo, "GuiaDer", new Vector3(0f, 1.18f, 1.78f),
+            new Vector3(0.40f, 2.36f, 0.10f), persianaOsc);
+        CubeChild(persianaGo, "CartelObra", new Vector3(-sx * 0.30f, 2.55f, 0f),
+            new Vector3(0.10f, 0.55f, 3.1f), cartel);
+
+        TextMesh rotulo = Texto("Rotulo ampliacion " + lado,
+            "AMPLIACIÓN " + lado.ToUpperInvariant(),
+            new Vector3(sx * 9.58f, 2.56f, 7.25f), 0.075f, new Color(1f, 0.94f, 0.70f));
+        rotulo.transform.rotation = Quaternion.Euler(0f, sx > 0f ? -90f : 90f, 0f);
+        rotulo.fontStyle = FontStyle.Bold;
+        rotulo.gameObject.transform.SetParent(root.transform, true);
+
+        // Dos huecos de mueble dentro del ala, inactivos hasta comprarla.
+        BuildSpot a = CreateBuildSpot(10 + id * 2, "Ala " + lado + " · puesto 1",
+            new Vector3(sx * 13f, 0f, 9.2f), 0f, root.transform);
+        BuildSpot b = CreateBuildSpot(11 + id * 2, "Ala " + lado + " · puesto 2",
+            new Vector3(sx * 13f, 0f, 5.6f), 0f, root.transform);
+        a.gameObject.SetActive(false);
+        b.gameObject.SetActive(false);
+
+        // Zona táctil delante de la persiana: se interactúa para abrir la tienda.
+        GameObject zonaGo = new GameObject("Zona ampliacion " + lado);
+        zonaGo.transform.position = new Vector3(sx * 8.45f, 0f, 7.25f);
+        BoxCollider zcol = zonaGo.AddComponent<BoxCollider>();
+        zcol.size = new Vector3(2.6f, 2.8f, 3.7f);
+        zcol.center = new Vector3(0f, 1.4f, 0f);
+        zcol.isTrigger = true;
+
+        ExpansionZone zona = zonaGo.AddComponent<ExpansionZone>();
+        zona.id = id;
+        zona.nombre = "Ampliación " + lado;
+        zona.descripcion = "6 × 9 m nuevos con 2 huecos de muebles";
+        zona.indiceRequerido = este ? -1 : 0;
+        zona.clientesExtra = 1;
+        if (zona.spots == null) zona.spots = new List<BuildSpot>();
+        if (zona.obstaculos == null) zona.obstaculos = new List<GameObject>();
+        zona.spots.Add(a);
+        zona.spots.Add(b);
+        zona.obstaculos.Add(persianaGo);
+        zona.obstaculos.Add(rotulo.gameObject);
+
+        if (todos != null)
+        {
+            todos.Add(a);
+            todos.Add(b);
+        }
+        return zona;
+    }
+
+    /// <summary>Tablet sobre una mesa para abrir la tienda sin buscar un hueco de obra.</summary>
+    static void CreateStoreTablet(Material wood)
+    {
+        Material pantalla = Mat("PantallaTienda", new Color(0.12f, 0.56f, 0.66f));
+        Material marco = Mat("MarcoTablet", new Color(0.12f, 0.14f, 0.18f));
+        Material cartel = Mat("CartelTiendaMuebles", new Color(0.78f, 0.56f, 0.16f));
+
+        GameObject go = new GameObject("TabletTienda");
+        go.transform.position = new Vector3(-4.5f, 0f, -0.6f);
+
+        BoxCollider col = go.AddComponent<BoxCollider>();
+        col.size = new Vector3(1.1f, 1.65f, 0.7f);
+        col.center = new Vector3(0f, 0.82f, 0f);
+
+        CubeChild(go, "Mesa", new Vector3(0f, 0.40f, 0f), new Vector3(1.0f, 0.8f, 0.6f), wood);
+        CubeChild(go, "Marco", new Vector3(0f, 1.02f, -0.02f), new Vector3(0.72f, 0.50f, 0.08f), marco);
+        CubeChild(go, "Pantalla", new Vector3(0f, 1.02f, -0.07f), new Vector3(0.62f, 0.40f, 0.02f), pantalla);
+        CubeChild(go, "Cartel", new Vector3(0f, 1.42f, -0.30f), new Vector3(1.05f, 0.22f, 0.04f), cartel);
+
+        TextMesh tm = Texto("Texto tablet", "TIENDA Y AMPLIACIONES",
+            new Vector3(-4.5f, 1.42f, -0.34f), 0.05f, new Color(1f, 0.94f, 0.70f));
+        tm.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        tm.fontStyle = FontStyle.Bold;
+
+        go.AddComponent<StoreTablet>();
+    }
+
     static Checkout CreateCheckout(Vector3 pos, Material wood, Material cinta, Material lector)
     {
         GameObject go = new GameObject("Caja registradora");
@@ -991,7 +1198,7 @@ public static class SceneBuilder
             24, TextAnchor.MiddleRight, font, Color.white);
 
         Text hint = TextUI(canvasGo.transform, "Ayuda",
-            "LA MYPIME GAME · MINIMERCADO · PC: WASD + E + TAB ventas + H contratar  |  MÓVIL: joystick + INTERACTUAR  |  PC del almacén: pedir mercancía",
+            "LA MYPIME GAME · MINIMERCADO · PC: WASD + E + TAB ventas + B tienda + H contratar  |  MÓVIL: joystick + INTERACTUAR  |  PC del almacén: pedir mercancía",
             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), new Vector2(1200f, 35f),
             15, TextAnchor.MiddleCenter, font, new Color(1f, 1f, 1f, 0.75f));
 
@@ -1077,6 +1284,19 @@ public static class SceneBuilder
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(180f, 40f),
             13, TextAnchor.MiddleCenter, font, Color.white);
 
+        // Botón de la tienda de muebles y ampliaciones
+        GameObject tiendaGo = new GameObject("BotonTienda", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        tiendaGo.transform.SetParent(canvasGo.transform, false);
+        RectTransform tienda = tiendaGo.GetComponent<RectTransform>();
+        tienda.anchorMin = tienda.anchorMax = new Vector2(1f, 1f);
+        tienda.pivot = new Vector2(1f, 1f);
+        tienda.anchoredPosition = new Vector2(-25f, -226f);
+        tienda.sizeDelta = new Vector2(180f, 45f);
+        tiendaGo.GetComponent<Image>().color = new Color(0.62f, 0.46f, 0.16f, 0.82f);
+        TextUI(tiendaGo.transform, "TextoBotonTienda", "TIENDA (B)",
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(180f, 40f),
+            15, TextAnchor.MiddleCenter, font, Color.white);
+
         // Círculo base del joystick
         GameObject joyBase = new GameObject("JoystickBase", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         joyBase.transform.SetParent(canvasGo.transform, false);
@@ -1116,6 +1336,7 @@ public static class SceneBuilder
             17, TextAnchor.MiddleCenter, font, Color.white);
 
         canvasGo.AddComponent<OrderComputerUI>();
+        canvasGo.AddComponent<StoreUI>();
         HUD hud = canvasGo.AddComponent<HUD>();
         hud.moneyText = money;
         hud.goalText = goal;
@@ -1130,6 +1351,7 @@ public static class SceneBuilder
         hud.empleadosText = empText;
         hud.hireButton = hire;
         hud.fireButton = fire;
+        hud.tiendaButton = tienda;
     }
 
     static Text TextUI(Transform parent, string name, string content,

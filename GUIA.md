@@ -1,4 +1,4 @@
-# LA MYPIME GAME — guía del MVP v10
+# LA MYPIME GAME — guía del MVP v11
 
 Simulador de una **MYPIME / minimercado** en Unity 3D para móvil.
 
@@ -19,7 +19,7 @@ El proyecto **ya está listo para abrir**: usa **Unity 6000.6.9f1** (instalado e
 
 ```
 Assets/LA MYPIME GAME/
-  Scripts/   (22 archivos .cs)
+  Scripts/   (27 archivos .cs)
   Editor/    (2 archivos .cs: SceneBuilder + InputHandlingSetup)
   Models/    (25 FBX cartoon)
   Scenes/    (DemoMypime.unity, ya generada)
@@ -66,6 +66,29 @@ La computadora del almacén abre una pantalla con el **catálogo del proveedor**
 
 ---
 
+## 2c. Tienda de muebles y ampliaciones (v11)
+
+La **tablet** junto a la caja (`x=-4,5, z=-0,6`) o el botón **TIENDA (B)** abren una pantalla con dos pestañas, igual que en *My Supermarket Simulator 3D*:
+
+### Pestaña MUEBLES
+
+- Elige primero el **producto** que venderá el mueble (los 8 del catálogo).
+- Compra **estante básico** (8 huecos), **góndola doble** (12 huecos) o **nevera** (8 huecos, gasta luz). Los precios en CUP suben con el índice diario.
+- El mueble aparece en el **primer hueco de obra libre** (o en el hueco desde el que abriste la pantalla).
+- Quedan **2 huecos de obra** en el pasillo central desde el día 1, señalizados con un cartel **OBRA**. También puedes interactuar directamente con ellos.
+- El mueble nuevo es jugable: se rellena desde las cajas del almacén y los clientes lo usan igual que los demás.
+
+### Pestaña AMPLIACIONES
+
+- **Ampliación Este**: 6 × 9 m, 2 huecos nuevos, +1 cliente simultáneo y +alquiler diario. Cuesta 55 USD (51.150 CUP el día 1).
+- **Ampliación Oeste**: requiere la Este; añade otros 2 huecos, +1 cliente y más alquiler. Cuesta 85 USD.
+- El ala está cerrada por una **persiana metálica** hasta que la compras. Al comprarla se retira la persiana, se abre el paso y se activan sus huecos.
+- Cada ampliación sube el **alquiler diario** y el **límite de clientes**; la meta diaria no cambia.
+
+Las compras, los muebles construidos y las ampliaciones abiertas se guardan en `supermercado_guardado.json`.
+
+---
+
 ## 3. Controles
 
 | Acción | PC | Móvil |
@@ -77,6 +100,7 @@ La computadora del almacén abre una pantalla con el **catálogo del proveedor**
 | Analítica de ventas | **Tab** | Botón `VENTAS` arriba-derecha |
 | Contratar empleado | **H** | Botón `CONTRATAR` |
 | Despedir empleado | **Mayús+H** | Botón `DESPEDIR` |
+| Tienda de muebles | **B** / toca un cartel OBRA | Botón `TIENDA` o tablet |
 | Guardar | **F5** | Automático al pausar |
 | Reiniciar tras quiebra | **F6** o clic | Toca la pantalla |
 
@@ -97,6 +121,8 @@ La computadora del almacén abre una pantalla con el **catálogo del proveedor**
 11. Contrata hasta 2 empleados con **H**: caminan solos hasta una caja de pedidos, pagan el lote y reponen la estantería más vacía.
 12. El triciclo del proveedor **solo sale si hay pedidos pagados en la computadora**, sin horarios ni escasez: lo pagas y sale enseguida por la carretera hasta el muelle, deja **únicamente esos pedidos** en el **almacén** y vuelve a quedar aparcado. Si pides más cosas mientras está en ruta, hará otro viaje al terminar. Ya no hay viajes al amanecer ni antes de cerrar. Para reponer, entra al almacén por la **puerta de la pared divisoria**; eres tú o un empleado quien lleva la mercancía a las estanterías. El día 1 empieza con las cajas llenas y el triciclo oculto.
 13. Si no puedes pagar los gastos, entra la **quiebra**: toca la pantalla para volver a empezar.
+14. Abre la **TIENDA** (botón, tablet o cartel `OBRA`) para comprar estanterías y ampliar el local. El mueble se coloca al instante y luego se rellena desde el almacén.
+15. Las **ampliaciones Este/Oeste** añaden metros, huecos de muebles, clientes y alquiler: conviene comprarlas cuando las ventas ya cubren el gasto extra.
 
 ### Productos provisionales (v10)
 
@@ -244,11 +270,16 @@ El presupuesto de cada cliente se calcula al llegar a caja: `suma de precios del
 | `OrderCatalog.cs` | Catálogo del proveedor: productos pedibles, lote, máximo y activo/desactivado. |
 | `OrderComputer.cs` | Computadora interactuable del almacén que abre la pantalla de pedidos. |
 | `OrderComputerUI.cs` | Pantalla táctil/PC de pedidos: cantidades, coste, confirmación y estado pendiente. |
-| `Editor/SceneBuilder.cs` | Generador de escena (entrada con cartel, 8 muebles, 8 pedidos, computadora, carretera, muelle, pared divisoria, almacén, triciclo e interfaz). |
+| `StoreManager.cs` | Precios de muebles/ampliaciones, compra y colocación, alquiler extra, límite de clientes y fábrica de muebles procedurales. |
+| `StoreUI.cs` | Pantalla de tienda con pestañas MUEBLES y AMPLIACIONES, selección de producto y avisos. |
+| `StoreTablet.cs` | Tablet del local que abre la tienda de muebles. |
+| `BuildSpot.cs` | Hueco de obra interactuable: cartel, compra y construcción del mueble. |
+| `ExpansionZone.cs` | Ala nueva cerrada por persiana: compra, apertura y activación de sus huecos. |
+| `Editor/SceneBuilder.cs` | Generador de escena (entrada con cartel, 8 muebles, 8 pedidos, computadora, carretera, muelle, pared divisoria, almacén, triciclo, huecos de obra, tablet y ampliaciones). |
 
 ### A* en breve
 
-`NavigationGrid.Build()` marca las celdas que solapan estanterías, pedidos, caja y paredes (con margen de 0,35 m); los dinteles se ignoran para dejar libre la puerta del almacén. `FindPath()` usa A* de 8 vecinos, evita cortar esquinas y suaviza la ruta con línea de visión. Si no hay grid, el cliente se mueve en línea recta.
+`NavigationGrid.Build()` marca las celdas que solapan estanterías, pedidos, caja, tablet y paredes (con margen de 0,35 m); los dinteles se ignoran para dejar libre la puerta del almacén y la persiana cerrada bloquea el ala sin comprar. `FindPath()` usa A* de 8 vecinos, evita cortar esquinas y suaviza la ruta con línea de visión. Si no hay grid, el cliente se mueve en línea recta. El grid cubre también las alas Este/Oeste (`x` de −16,5 a 16,5) y se **recalcula al comprar** un mueble o una ampliación.
 
 Selecciona `NavigationGrid` y activa **Mostrar Grid** para ver las celdas bloqueadas. Si mueves muebles, usa **Recalcular grid** (clic derecho en el componente).
 
@@ -278,6 +309,9 @@ Selecciona `NavigationGrid` y activa **Mostrar Grid** para ver las celdas bloque
 | El triciclo se queda quieto | Es normal si no hay pedidos: confirma uno en la computadora. Si hay pedidos y no sale, revisa los 3 `waypoints` (`Carretera`, `CarreteraCentro`, `Muelle`) y que `manager.triciclo` esté asignado. |
 | El empleado no repone | Comprueba que haya pedido disponible y dinero; ajusta `intervalo` en `Employee`. |
 | Los sueldos arruinan la partida | Despide con Mayús+H o baja `salarioPorEmpleado` en `GameManager`. |
+| No aparecen los carteles OBRA ni la tablet | Vuelve a generar la escena con **LA MYPIME GAME > Generar escena demo**. |
+| Compré una ampliación y no puedo entrar | Acércate a la persiana y pulsa E, o usa el botón TIENDA; comprueba que la persiana desapareció. |
+| Los clientes no van a los muebles nuevos | Pulsa **Recalcular grid** en `NavigationGrid` o revisa que el hueco no esté bloqueado. |
 
 ---
 

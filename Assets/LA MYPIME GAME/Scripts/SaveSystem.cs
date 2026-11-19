@@ -44,6 +44,12 @@ public class SaveData
     public List<string> catalogoProductosActivos = new List<string>();
     public bool catalogoConfigurado;
 
+    // Tienda de muebles y ampliaciones (campos nuevos; las partidas antiguas los leen vacíos).
+    public List<int> mueblesSpot = new List<int>();
+    public List<int> mueblesTipo = new List<int>();
+    public List<string> mueblesProducto = new List<string>();
+    public List<bool> ampliacionesCompradas = new List<bool>();
+
     public string analyticsJson = "";
 }
 
@@ -106,6 +112,20 @@ public static class SaveSystem
                     data.catalogoProductosActivos.Add(e.producto.nombre);
         }
 
+        if (gm.tienda != null)
+        {
+            foreach (BuildSpot spot in gm.tienda.spots)
+            {
+                if (spot == null || !spot.ocupado) continue;
+                data.mueblesSpot.Add(spot.id);
+                data.mueblesTipo.Add((int)spot.tipoConstruido);
+                data.mueblesProducto.Add(spot.productoConstruido != null ? spot.productoConstruido.nombre : "");
+            }
+
+            foreach (ExpansionZone zona in gm.tienda.expansiones)
+                data.ampliacionesCompradas.Add(zona != null && zona.comprada);
+        }
+
         try
         {
             File.WriteAllText(Ruta, JsonUtility.ToJson(data, true));
@@ -136,6 +156,12 @@ public static class SaveSystem
             gm.gameOver = data.gameOver;
             gm.empleados = Mathf.Clamp(data.empleados, 0, gm.maxEmpleados);
             SalesAnalytics.Deserialize(data.analyticsJson);
+
+            // Reconstruir muebles comprados y ampliaciones ANTES de restaurar stocks,
+            // porque las estanterías nuevas se buscan por nombre en la lista.
+            if (gm.tienda != null)
+                gm.tienda.AplicarGuardado(data.mueblesSpot, data.mueblesTipo,
+                    data.mueblesProducto, data.ampliacionesCompradas);
 
             for (int i = 0; i < data.nombresEstanterias.Count && i < data.stocks.Count; i++)
             {
